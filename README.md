@@ -16,10 +16,10 @@
     ./iforce.sh
 ### Run command ⚡
     python iforce 
-#### 📞 Contact & Updates:
+## 📞 Contact & Updates:  
+📌 **Created by:** [EgaleX5](https://github.com/EgaleX5)  
+📌 **Instagram:** [@aditya.waliya0](https://www.instagram.com/aditya.waliya0)  
+📌 **GitHub:** [EgaleX5](https://github.com/EgaleX5)  
 
-📌 Created by: Egalex5 
-📌 Instagram: @aditya.waliya0
-📌 GitHub: EgaleX5
+🚀 **Follow for more cybersecurity tools & updates!**
 
-🚀 Follow for more cybersecurity tools & updates!
