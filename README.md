@@ -18,7 +18,7 @@
     python iforce 
 #### 📞 Contact & Updates:
 
-📌 Created by: EgaleX5
+📌 Created by: Egalex5 
 📌 Instagram: @aditya.waliya0
 📌 GitHub: EgaleX5
 
